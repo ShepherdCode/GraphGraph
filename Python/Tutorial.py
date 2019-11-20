@@ -6,7 +6,7 @@ class Tutorial:
 
     def print_basic_stats ( self, graph ):
         print ( "----------------")
-        print ( graph )
+        igraph.summary ( graph )
         # print ( dir(graph) )  # show every possible attribute
         # print ( graph["name"] )   # show one attribute
         if graph.is_directed():

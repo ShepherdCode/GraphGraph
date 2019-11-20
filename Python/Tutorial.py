@@ -16,6 +16,14 @@ class Tutorial:
             print ( " out-degree: " ,end='' )
             print ( graph.outdegree( [0,1,2,3] ) )
             # print ( graph.betweenness(vertices=[0,1,2,3], directed=True) )
+            print ( " closeness in: " ,end='' )
+            print ( graph.closeness(mode=igraph.IN,normalized=False) )
+            print ( " closeness out: " ,end='' )
+            print ( graph.closeness(mode=igraph.OUT,normalized=False) )
+            print ( " normalized closeness in: " ,end='' )
+            print ( graph.closeness(mode=igraph.IN) )
+            print ( " normalized closeness out: " ,end='' )
+            print ( graph.closeness(mode=igraph.OUT) )
         else:
             print ("Undirected graph")
             print ( " degree: " ,end='' )
@@ -24,6 +32,8 @@ class Tutorial:
         print ( graph.betweenness() )
         print ( " edge betweenness: " ,end='' )
         print ( graph.edge_betweenness() )
+        print ( " total normalized closeness: " ,end='' )
+        print ( graph.closeness() )
         print ( "----------------")
 
     def main (self):

@@ -11,22 +11,23 @@ t.py should contain the imported variables.
 """
 
 from __future__ import print_function
-
 import json
 import sys
-
 import twitter
 from TwitterLogin import ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET
 
 
 def get_tweets(api=None, screen_name=None):
-    timeline = api.GetUserTimeline(screen_name=screen_name, count=200)
+    # Start with last 20 tweets from this user
+    timeline = api.GetUserTimeline(screen_name=screen_name, count=20)
+    # Find the oldest tweet based on field "id"
     earliest_tweet = min(timeline, key=lambda x: x.id).id
     print("getting tweets before:", earliest_tweet)
-
+    # In a loop, get next 20 tweets with older "id" until Twitter refuses.
+    # Either user has no more tweets or we hit the API limit of 3200.
     while True:
         tweets = api.GetUserTimeline(
-            screen_name=screen_name, max_id=earliest_tweet, count=200
+            screen_name=screen_name, max_id=earliest_tweet, count=20
         )
         new_earliest = min(tweets, key=lambda x: x.id).id
 
@@ -50,5 +51,7 @@ if __name__ == "__main__":
 
     with open('test_output.json', 'w+') as f:
         for tweet in timeline:
+            print (tweet.text)
+            print ()
             f.write(json.dumps(tweet._json))
             f.write('\n')

@@ -1,3 +1,6 @@
+$ git
+.gitignore~
+
 # Python
 __pycache__/
 *.py[cod]
@@ -12,3 +15,6 @@ __pycache__/
 # BlueJ
 *.ctxt
 *.bluej
+
+# Data
+*.json

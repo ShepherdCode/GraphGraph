@@ -74,6 +74,6 @@ if __name__ == "__main__":
     timeline = []
     if True:
         timeline = get_tweets(api=api, screen_name=screen_name)
-    #write_screen(timeline)
+    write_screen(timeline)
     write_json(timeline)
     write_csv(timeline)

@@ -18,3 +18,5 @@ __pycache__/
 
 # Data
 *.json
+*.csv
+*.xml

@@ -34,15 +34,33 @@ def write_json(timeline):
             f.write(json.dumps(tweet._json,indent=4))
             f.write('\n')
 
+def safe_get(dictionary,field,default):
+    if not isinstance(dictionary,dict) or field is None or not field in dictionary:
+        return default
+    return dictionary.get(field)
+
 def write_csv(timeline):
     with open('tweets.csv', 'w', newline='', encoding='utf-8') as f:
-        fieldnames = ['created_at']
-        writer = csv.DictWriter(f, fieldnames=fieldnames, dialect=csv.QUOTE_NONNUMERIC)
+        fieldnames = ['id_str','created_at','screen_name',
+            'retweet_count','favorite_count','full_text']
+        writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_NONNUMERIC)
         writer.writeheader()
         for tweet in timeline:
-            tweet_dict=tweet.AsDict()
-            print(tweet_dict.keys())
-            #writer.writerow(tweet_dict['created_at'])
+            one_tweet=tweet.AsDict()
+            #print(type(one_tweet))
+            #print(dir(one_tweet.keys()))
+            #print(one_tweet.keys())
+            t_id = one_tweet['id_str']
+            t_created = safe_get(one_tweet,'created_at','None')
+            t_user = safe_get(one_tweet,'user','None')
+            t_name = safe_get(t_user,'screen_name','None')
+            t_retweet = safe_get(one_tweet,'retweet_count',0)
+            t_favorite = safe_get(one_tweet,'favorite_count',0)
+            t_text = safe_get(one_tweet,'full_text','None').replace('\n',' ')
+            sub_dict={'id_str':t_id,'created_at':t_created,'screen_name':t_name,
+                'retweet_count':t_retweet,'favorite_count':t_favorite,
+                'full_text':t_text}
+            writer.writerow(sub_dict)
 
 if __name__ == "__main__":
     api = twitter.Api(

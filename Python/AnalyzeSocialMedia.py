@@ -2,6 +2,10 @@ import sys
 import os
 import csv
 import TwitterHashtag
+import nltk
+from nltk.tokenize import word_tokenize
+
+TOKEN_SEPARATOR=' '
 
 def read_csv(filename):
     database=[]
@@ -53,23 +57,21 @@ def clean_text(orig_text,verbose=False):
     if verbose: print()
     return clean_text;
 
-def clean_tweets(tweets):
-    for row in tweets:
-        original = row['full_text']
-        clean = clean_text(original)
-        row['full_text']=clean
-    return tweets
-
 def analyze_tokens(tweets,filename):
     with open(filename, 'w', newline='', encoding='utf-8') as f:
         fieldnames = ['id_str','original_text','cleaned_text','filtered_tokens','stemmed_tokens','lemmatized_tokens']
         writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_NONNUMERIC)
         writer.writeheader()
         for one_tweet in tweets:
-            t_id = one_tweet.get('id_str')
-            t_text = one_tweet.get('full_text')
-            new_dict={'id_str':t_id,
-                    'original_text':t_text}
+            tweet_id = one_tweet.get('id_str')
+            full_text = one_tweet.get('full_text')
+            strip_text=clean_text(full_text)
+            filt_tokens_list=word_tokenize(strip_text)
+            filt_tokens_str=TOKEN_SEPARATOR.join(filt_tokens_list)
+            new_dict={'id_str':tweet_id,
+                    'original_text':full_text,
+                    'cleaned_text':strip_text,
+                    'filtered_tokens':filt_tokens_str}
             writer.writerow(new_dict)
 
 if __name__ == "__main__":
@@ -79,6 +81,5 @@ if __name__ == "__main__":
     if not os.path.exists(CSV_FILENAME):
         download_from_twitter(CSV_FILENAME,JSON_FILENAME)
     tweets=read_csv(CSV_FILENAME)
-    tweets=clean_tweets(tweets)
     print("Number of Tweets: {}".format(len(tweets)))
     analyze_tokens(tweets,TOKENS_FILENAME)

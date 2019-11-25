@@ -4,8 +4,7 @@ import csv
 import TwitterHashtag
 import nltk
 from nltk.tokenize import word_tokenize
-
-TOKEN_SEPARATOR=' '
+from nltk.corpus import stopwords
 
 def read_csv(filename):
     database=[]
@@ -57,6 +56,16 @@ def clean_text(orig_text,verbose=False):
     if verbose: print()
     return clean_text;
 
+def get_token_string(textin):
+    TOKEN_SEPARATOR=' '
+    tokens_list=word_tokenize(textin)  # nltk library call
+    large_tokens=[w for w in tokens_list if len(w)>=3]
+    stops = set(stopwords.words('english')) # lntk works like 'and'
+    # https://www.geeksforgeeks.org/removing-stop-words-nltk-python/
+    nonstop_tokens_list=[w for w in large_tokens if not w in stops]
+    filt_tokens_str=TOKEN_SEPARATOR.join(nonstop_tokens_list)
+    return filt_tokens_str
+
 def analyze_tokens(tweets,filename):
     with open(filename, 'w', newline='', encoding='utf-8') as f:
         fieldnames = ['id_str','original_text','cleaned_text','filtered_tokens','stemmed_tokens','lemmatized_tokens']
@@ -66,12 +75,11 @@ def analyze_tokens(tweets,filename):
             tweet_id = one_tweet.get('id_str')
             full_text = one_tweet.get('full_text')
             strip_text=clean_text(full_text)
-            filt_tokens_list=word_tokenize(strip_text)
-            filt_tokens_str=TOKEN_SEPARATOR.join(filt_tokens_list)
+            filt_tokens=get_token_string(strip_text)
             new_dict={'id_str':tweet_id,
                     'original_text':full_text,
                     'cleaned_text':strip_text,
-                    'filtered_tokens':filt_tokens_str}
+                    'filtered_tokens':filt_tokens}
             writer.writerow(new_dict)
 
 if __name__ == "__main__":

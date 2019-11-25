@@ -13,12 +13,13 @@ import csv
 def get_tweets(api=None, hash_tag=None, goal=100):
     # GetSearch(self, term=None, raw_query=None, geocode=None, since_id=None, max_id=None, until=None, since=None, count=15, lang=None, locale=None, result_type='mixed', include_entities=None, return_json=False)
     # Return twitter search results for a given term. You must specify one >of term, geocode, or raw_query.
-    all_tweets = api.GetSearch(count=20,term=hash_tag,lang="en")
+    bucket_size = 100
+    all_tweets = api.GetSearch(count=bucket_size,term=hash_tag,lang="en")
     while len(all_tweets) < goal:
         earliest_id = min(all_tweets, key=lambda x: x.id).id
         earliest_id = earliest_id - 1
         print("{} so far. Get tweets before {}".format(len(all_tweets),earliest_id))
-        more_tweets = api.GetSearch(count=10,term=hash_tag,lang="en",max_id=earliest_id)
+        more_tweets = api.GetSearch(count=bucket_size,term=hash_tag,lang="en",max_id=earliest_id)
         if not more_tweets:
             break
         all_tweets += more_tweets
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     print(hash_tag)
     timeline = []
     if True:
-        timeline = get_tweets(api=api, hash_tag=hash_tag, goal=40)
+        timeline = get_tweets(api=api, hash_tag=hash_tag, goal=2000)
     #write_screen(timeline)
     write_json(timeline)
     write_csv(timeline)

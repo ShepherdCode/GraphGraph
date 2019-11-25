@@ -12,9 +12,13 @@ CSV_FILENAME="tweets.csv"
 JSON_FILENAME="tweets.json"
 TOKENS_FILENAME="cleantokens.csv"
 FREQ_FILENAME="frequency.csv"
+SNA_FILENAME="sna.csv"
+TOP_TEN=10
 TOKEN_SEPARATOR=' '
 STOP_LANGUAGE='english'
 MIN_WORD_SIZE=3
+DEFAULT_HASHTAG="MachineLearning"
+DEFAULT_GOAL=3000
 stops = set(stopwords.words(STOP_LANGUAGE)) # lntk works like 'and'
 stemmer = PorterStemmer()
 lemmatizer = WordNetLemmatizer()
@@ -31,8 +35,8 @@ def download_from_twitter():
     (csv,json)=(CSV_FILENAME,JSON_FILENAME)
     print("Initialize Twitter API...")
     api=TwitterHashtag.twitter_initialize()
-    GOAL = 10
-    hash_tag="NeuralNetwork"
+    GOAL = DEFAULT_GOAL
+    hash_tag=DEFAULT_HASHTAG
     if len(sys.argv) > 1:
         hash_tag = sys.argv[1]
     if len(sys.argv) > 2:
@@ -132,6 +136,37 @@ def analyze_tokens(tweets):
     print("Analyze lemmas in {} tokens...".format(len(lemmas.split())))
     analyze_word_frequency(lemmas)
 
+def analyze_top_tweeters():
+    database = read_csv(CSV_FILENAME)
+    compilation = {}
+    for one_tweet in database:
+        user = one_tweet['screen_name']
+        tweets = 1
+        retweets = int(one_tweet['retweet_count'])
+        favorites = int(one_tweet['favorite_count'])
+        if user not in compilation:
+            compilation[user]=(tweets,retweets,favorites)
+        (tw,rt,fv) = compilation[user]
+        (tw,rt,fv) = (tw+tweets, rt+retweets, fv+favorites)
+        compilation[user] = (tw,rt,fv)
+    # sort by sum of retweets+favorites
+    sortcomp = sorted(compilation.items(), key=lambda kv: kv[1][1]+kv[1][2])
+    with open(SNA_FILENAME, 'w', newline='', encoding='utf-8') as f:
+        fieldnames = ['screen_name','tweets','retweets','favorites','engagements','average']
+        writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_NONNUMERIC)
+        writer.writeheader()
+        writes = 0;
+        for one_line in reversed(sortcomp):
+            user = one_line[0]
+            (tweets,retweets,favorites) = one_line[1]
+            engage = retweets+favorites
+            avg = int(0.5+engage/tweets)
+            new_dict={'screen_name':user,'tweets':tweets,'average':avg,
+                'retweets':retweets,'favorites':favorites,'engagements':engage}
+            writer.writerow(new_dict)
+            writes = writes + 1
+            if writes >= TOP_TEN: break
+
 if __name__ == "__main__":
     if os.path.exists(CSV_FILENAME):
         print("Reuse existing file of tweets: {}".format(CSV_FILENAME))
@@ -140,4 +175,6 @@ if __name__ == "__main__":
         download_from_twitter()
     tweets=read_csv(CSV_FILENAME)
     analyze_tokens(tweets)
-    print("Our analysis is in these files: {}, {}, {}".format(CSV_FILENAME,TOKENS_FILENAME,FREQ_FILENAME))
+    analyze_top_tweeters()
+    print("Our analysis is in these files: {}, {}, {}, {}".format
+        (CSV_FILENAME,TOKENS_FILENAME,FREQ_FILENAME,SNA_FILENAME))

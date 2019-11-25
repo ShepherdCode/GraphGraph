@@ -6,12 +6,14 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+from nltk.stem import WordNetLemmatizer
 
 TOKEN_SEPARATOR=' '
 STOP_LANGUAGE='english'
 MIN_WORD_SIZE=3
 stops = set(stopwords.words(STOP_LANGUAGE)) # lntk works like 'and'
 stemmer = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
 
 def read_csv(filename):
     database=[]
@@ -74,6 +76,11 @@ def get_stems(tokens):
     stem_tokens=[stemmer.stem(w) for w in tokens]
     return stem_tokens
 
+def get_lemmas(tokens):
+    # Learned from https://www.geeksforgeeks.org/python-lemmatization-with-nltk/
+    lemma_tokens=[lemmatizer.lemmatize(w) for w in tokens]
+    return lemma_tokens
+
 def analyze_tokens(tweets,filename):
     with open(filename, 'w', newline='', encoding='utf-8') as f:
         fieldnames = ['id_str','original_text','cleaned_text','filtered_tokens','stemmed_tokens','lemmatized_tokens']
@@ -84,12 +91,16 @@ def analyze_tokens(tweets,filename):
             full_text = one_tweet.get('full_text')
             strip_text=clean_text(full_text)
             filt_tokens=get_tokens(strip_text)
-            token_stems=get_stems(filt_tokens)
-            token_str=TOKEN_SEPARATOR.join(token_stems)
+            stem_tokens=get_stems(filt_tokens)
+            stem_token_str=TOKEN_SEPARATOR.join(stem_tokens)
+            lemma_tokens=get_lemmas(filt_tokens)
+            lemma_token_str=TOKEN_SEPARATOR.join(lemma_tokens)
             new_dict={'id_str':tweet_id,
                     'original_text':full_text,
                     'cleaned_text':strip_text,
-                    'filtered_tokens':token_str}
+                    'filtered_tokens':stem_token_str,
+                    'stemmed_tokens':stem_token_str,
+                    'lemmatized_tokens':lemma_token_str}
             writer.writerow(new_dict)
 
 if __name__ == "__main__":

@@ -4,11 +4,11 @@
 # Docs at https://python-twitter.readthedocs.io/en/latest/
 
 #from __future__ import print_function
-import json
 import sys
+import json
+import csv
 import twitter
 from NotForGitHub import ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET
-import csv
 
 def get_tweets(api=None, hash_tag=None, goal=100):
     # GetSearch(self, term=None, raw_query=None, geocode=None, since_id=None, max_id=None, until=None, since=None, count=15, lang=None, locale=None, result_type='mixed', include_entities=None, return_json=False)
@@ -61,12 +61,17 @@ def write_csv(timeline):
                 'full_text':t_text}
             writer.writerow(sub_dict)
 
-if __name__ == "__main__":
-    GOAL = 10   # change to 2000 when ready
+def twitter_initialize():
     api = twitter.Api(
         CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET,
         tweet_mode='extended'
     )
+    return api
+
+if __name__ == "__main__":
+    print("Initialize Twitter API...")
+    api=twitter_initialize()
+    GOAL = 10   # change to 2000 when ready
     hash_tag="NeuralNetwork"
     if len(sys.argv) > 1:
         hash_tag = sys.argv[1]

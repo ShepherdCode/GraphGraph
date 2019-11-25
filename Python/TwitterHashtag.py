@@ -3,11 +3,11 @@
 # Source at https://github.com/bear/python-twitter/blob/master/examples/get_all_user_tweets.py
 # Docs at https://python-twitter.readthedocs.io/en/latest/
 
-from __future__ import print_function
+#from __future__ import print_function
 import json
 import sys
 import twitter
-from TwitterLogin import ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET
+from NotForGitHub import ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET, CONSUMER_KEY, CONSUMER_SECRET
 import csv
 
 def get_tweets(api=None, hash_tag=None, goal=100):
@@ -15,7 +15,7 @@ def get_tweets(api=None, hash_tag=None, goal=100):
     # Return twitter search results for a given term. You must specify one >of term, geocode, or raw_query.
     bucket_size = 100
     all_tweets = api.GetSearch(count=bucket_size,term=hash_tag,lang="en")
-    while len(all_tweets) < goal:
+    while len(all_tweets) < goal and len(all_tweets) > 0:
         earliest_id = min(all_tweets, key=lambda x: x.id).id
         earliest_id = earliest_id - 1
         print("{} so far. Get tweets before {}".format(len(all_tweets),earliest_id))
@@ -62,6 +62,7 @@ def write_csv(timeline):
             writer.writerow(sub_dict)
 
 if __name__ == "__main__":
+    GOAL = 10   # change to 2000 when ready
     api = twitter.Api(
         CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN_KEY, ACCESS_TOKEN_SECRET,
         tweet_mode='extended'
@@ -69,10 +70,12 @@ if __name__ == "__main__":
     hash_tag="NeuralNetwork"
     if len(sys.argv) > 1:
         hash_tag = sys.argv[1]
-    print(hash_tag)
+    if len(sys.argv) > 2:
+        GOAL = sys.argv[2]
+    print("Download {} tweets with hashtag {}.".format(hash_tag,GOAL))
     timeline = []
     if True:
-        timeline = get_tweets(api=api, hash_tag=hash_tag, goal=2000)
-    #write_screen(timeline)
+        timeline = get_tweets(api=api, hash_tag=hash_tag, goal=GOAL)
+    write_screen(timeline)
     write_json(timeline)
     write_csv(timeline)

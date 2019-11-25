@@ -5,7 +5,9 @@ $ git
 __pycache__/
 *.py[cod]
 *$py.class
-*.py~
+
+# Emacs
+*.*~
 
 # Java
 *.class
@@ -16,10 +18,12 @@ __pycache__/
 *.ctxt
 *.bluej
 
-# Data
+# Temporary Data
 *.json
 *.csv
 *.xml
+*.gz
 
 # Confidential Data
 NotForGitHub.py
+*.txt

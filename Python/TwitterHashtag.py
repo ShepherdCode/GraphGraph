@@ -30,8 +30,8 @@ def write_screen(timeline):
         print ("Lan={} Len={}\n{}\n".format(tweet.lang,
             len(tweet.full_text),tweet.full_text.replace('\n','')))
 
-def write_json(timeline):
-    with open('tweets.json', 'w') as f:
+def write_json(timeline,filename):
+    with open(filename, 'w') as f:
         for tweet in timeline:
             f.write(json.dumps(tweet._json,indent=4))
             f.write('\n')
@@ -41,8 +41,8 @@ def safe_get(dictionary,field,default):
         return default
     return dictionary.get(field)
 
-def write_csv(timeline):
-    with open('tweets.csv', 'w', newline='', encoding='utf-8') as f:
+def write_csv(timeline,filename):
+    with open(filename, 'w', newline='', encoding='utf-8') as f:
         fieldnames = ['id_str','created_at','screen_name',
             'retweet_count','favorite_count','full_text']
         writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_NONNUMERIC)

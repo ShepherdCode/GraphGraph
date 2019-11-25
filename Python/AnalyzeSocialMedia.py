@@ -8,6 +8,10 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 
+CSV_FILENAME="tweets.csv"
+JSON_FILENAME="tweets.json"
+TOKENS_FILENAME="cleantokens.csv"
+FREQ_FILENAME="frequency.csv"
 TOKEN_SEPARATOR=' '
 STOP_LANGUAGE='english'
 MIN_WORD_SIZE=3
@@ -23,7 +27,8 @@ def read_csv(filename):
             database.append(row)
     return database
 
-def download_from_twitter(csv,json):
+def download_from_twitter():
+    (csv,json)=(CSV_FILENAME,JSON_FILENAME)
     print("Initialize Twitter API...")
     api=TwitterHashtag.twitter_initialize()
     GOAL = 10
@@ -81,8 +86,29 @@ def get_lemmas(tokens):
     lemma_tokens=[lemmatizer.lemmatize(w) for w in tokens]
     return lemma_tokens
 
-def analyze_tokens(tweets,filename):
-    with open(filename, 'w', newline='', encoding='utf-8') as f:
+def analyze_word_frequency (word_string):
+    word_list = sorted(word_string.split())
+    prev_word=""
+    frequencies={}
+    for one_word in word_list:
+        if one_word == prev_word:
+            frequencies[one_word]=frequencies[one_word]+1
+        else:
+            frequencies[one_word]=1
+        prev_word = one_word
+    sortfreq = sorted(frequencies.items(), key=lambda kv: kv[1])
+    with open(FREQ_FILENAME, 'w', newline='', encoding='utf-8') as f:
+        fieldnames = ['lemma','frequency']
+        writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_NONNUMERIC)
+        writer.writeheader()
+        for one_pair in reversed(sortfreq):
+            new_dict={'lemma':one_pair[0],'frequency':one_pair[1]}
+            writer.writerow(new_dict)
+
+def analyze_tokens(tweets):
+    lemmas = ""
+    print("Analyze tokens in {} tweets...".format(len(tweets)))
+    with open(TOKENS_FILENAME, 'w', newline='', encoding='utf-8') as f:
         fieldnames = ['id_str','original_text','cleaned_text','filtered_tokens','stemmed_tokens','lemmatized_tokens']
         writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_NONNUMERIC)
         writer.writeheader()
@@ -102,13 +128,16 @@ def analyze_tokens(tweets,filename):
                     'stemmed_tokens':stem_token_str,
                     'lemmatized_tokens':lemma_token_str}
             writer.writerow(new_dict)
+            lemmas=TOKEN_SEPARATOR.join([lemmas,lemma_token_str])
+    print("Analyze lemmas in {} tokens...".format(len(lemmas.split())))
+    analyze_word_frequency(lemmas)
 
 if __name__ == "__main__":
-    CSV_FILENAME="tweets.csv"
-    JSON_FILENAME="tweets.json"
-    TOKENS_FILENAME="cleantokens.csv"
-    if not os.path.exists(CSV_FILENAME):
-        download_from_twitter(CSV_FILENAME,JSON_FILENAME)
+    if os.path.exists(CSV_FILENAME):
+        print("Reuse existing file of tweets: {}".format(CSV_FILENAME))
+    else:
+        print("Download from Twitter to {}".format(CSV_FILENAME))
+        download_from_twitter()
     tweets=read_csv(CSV_FILENAME)
-    print("Number of Tweets: {}".format(len(tweets)))
-    analyze_tokens(tweets,TOKENS_FILENAME)
+    analyze_tokens(tweets)
+    print("Our analysis is in these files: {}, {}, {}".format(CSV_FILENAME,TOKENS_FILENAME,FREQ_FILENAME))

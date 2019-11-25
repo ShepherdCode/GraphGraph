@@ -5,6 +5,13 @@ import TwitterHashtag
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+
+TOKEN_SEPARATOR=' '
+STOP_LANGUAGE='english'
+MIN_WORD_SIZE=3
+stops = set(stopwords.words(STOP_LANGUAGE)) # lntk works like 'and'
+stemmer = PorterStemmer()
 
 def read_csv(filename):
     database=[]
@@ -56,15 +63,16 @@ def clean_text(orig_text,verbose=False):
     if verbose: print()
     return clean_text;
 
-def get_token_string(textin):
-    TOKEN_SEPARATOR=' '
+def get_tokens(textin):
     tokens_list=word_tokenize(textin)  # nltk library call
-    large_tokens=[w for w in tokens_list if len(w)>=3]
-    stops = set(stopwords.words('english')) # lntk works like 'and'
-    # https://www.geeksforgeeks.org/removing-stop-words-nltk-python/
+    large_tokens=[w for w in tokens_list if len(w)>=MIN_WORD_SIZE]
+    # Learned from https://www.geeksforgeeks.org/removing-stop-words-nltk-python/
     nonstop_tokens_list=[w for w in large_tokens if not w in stops]
-    filt_tokens_str=TOKEN_SEPARATOR.join(nonstop_tokens_list)
-    return filt_tokens_str
+    return nonstop_tokens_list
+
+def get_stems(tokens):
+    stem_tokens=[stemmer.stem(w) for w in tokens]
+    return stem_tokens
 
 def analyze_tokens(tweets,filename):
     with open(filename, 'w', newline='', encoding='utf-8') as f:
@@ -75,11 +83,13 @@ def analyze_tokens(tweets,filename):
             tweet_id = one_tweet.get('id_str')
             full_text = one_tweet.get('full_text')
             strip_text=clean_text(full_text)
-            filt_tokens=get_token_string(strip_text)
+            filt_tokens=get_tokens(strip_text)
+            token_stems=get_stems(filt_tokens)
+            token_str=TOKEN_SEPARATOR.join(token_stems)
             new_dict={'id_str':tweet_id,
                     'original_text':full_text,
                     'cleaned_text':strip_text,
-                    'filtered_tokens':filt_tokens}
+                    'filtered_tokens':token_str}
             writer.writerow(new_dict)
 
 if __name__ == "__main__":

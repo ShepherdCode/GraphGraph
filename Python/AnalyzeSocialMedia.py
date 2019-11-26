@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Program to characterize recent usage of a Twitter hashtag.
+
+By Jason Miller
+"""
+
 import sys
 import os
 import csv
@@ -17,13 +24,14 @@ TOP_TEN=10
 TOKEN_SEPARATOR=' '
 STOP_LANGUAGE='english'
 MIN_WORD_SIZE=3
-DEFAULT_HASHTAG="MachineLearning"
+DEFAULT_HASHTAG="ComputerScience"
 DEFAULT_GOAL=3000
 stops = set(stopwords.words(STOP_LANGUAGE)) # lntk works like 'and'
 stemmer = PorterStemmer()
 lemmatizer = WordNetLemmatizer()
 
 def read_csv(filename):
+    """Read any CSV file into memory."""
     database=[]
     with open(filename, 'r', newline='') as f:
         reader = csv.DictReader(f)
@@ -32,24 +40,20 @@ def read_csv(filename):
     return database
 
 def download_from_twitter():
+    """Fetch tweets from Twitter.com and save in CSV file."""
     (csv,json)=(CSV_FILENAME,JSON_FILENAME)
     print("Initialize Twitter API...")
     api=TwitterHashtag.twitter_initialize()
-    GOAL = DEFAULT_GOAL
-    hash_tag=DEFAULT_HASHTAG
-    if len(sys.argv) > 1:
-        hash_tag = sys.argv[1]
-    if len(sys.argv) > 2:
-        GOAL = int(sys.argv[2])
     print("Download {} tweets with hashtag {}.".format(GOAL,hash_tag))
     timeline = []
     if True:
         timeline = TwitterHashtag.get_tweets(api=api, hash_tag=hash_tag, goal=GOAL)
-    #TwitterHashtag.write_screen(timeline)
-    TwitterHashtag.write_json(timeline,json)
-    TwitterHashtag.write_csv(timeline,csv)
+    #TwitterHashtag.write_screen(timeline) # for debugging
+    TwitterHashtag.write_json(timeline,json) # for browsing
+    TwitterHashtag.write_csv(timeline,csv) # for processing
 
 def clean_text(orig_text,verbose=False):
+    """Prepare for NLP by removing problematic characters."""
     import re, string
     if verbose: print("ORIGINAL")
     if verbose: print(orig_text)
@@ -75,6 +79,7 @@ def clean_text(orig_text,verbose=False):
     return clean_text;
 
 def get_tokens(textin):
+    """Make a list of words from the given string."""
     tokens_list=word_tokenize(textin)  # nltk library call
     large_tokens=[w for w in tokens_list if len(w)>=MIN_WORD_SIZE]
     # Learned from https://www.geeksforgeeks.org/removing-stop-words-nltk-python/
@@ -82,15 +87,18 @@ def get_tokens(textin):
     return nonstop_tokens_list
 
 def get_stems(tokens):
+    """Make a list of word stems from the given word list."""
     stem_tokens=[stemmer.stem(w) for w in tokens]
     return stem_tokens
 
 def get_lemmas(tokens):
+    """Make a lemmatized list from the given word list."""
     # Learned from https://www.geeksforgeeks.org/python-lemmatization-with-nltk/
     lemma_tokens=[lemmatizer.lemmatize(w) for w in tokens]
     return lemma_tokens
 
 def analyze_word_frequency (word_string):
+    """Generate histogram from given string. Write CSV file."""
     word_list = sorted(word_string.split())
     prev_word=""
     frequencies={}
@@ -110,6 +118,7 @@ def analyze_word_frequency (word_string):
             writer.writerow(new_dict)
 
 def analyze_tokens(tweets):
+    """Generate stems and lemmas from given list of tweets. Write CSV files."""
     lemmas = ""
     print("Analyze tokens in {} tweets...".format(len(tweets)))
     with open(TOKENS_FILENAME, 'w', newline='', encoding='utf-8') as f:
@@ -136,8 +145,9 @@ def analyze_tokens(tweets):
     print("Analyze lemmas in {} tokens...".format(len(lemmas.split())))
     analyze_word_frequency(lemmas)
 
-def analyze_top_tweeters():
-    database = read_csv(CSV_FILENAME)
+def analyze_top_tweeters(filename):
+    """Generate list of important users from CSV file of tweets."""
+    database = read_csv(filename)
     compilation = {}
     for one_tweet in database:
         user = one_tweet['screen_name']
@@ -168,6 +178,13 @@ def analyze_top_tweeters():
             if writes >= TOP_TEN: break
 
 if __name__ == "__main__":
+    """Usage: python3 AnalyzeSocialMedia.py [hashtag [count]]"""
+    GOAL = DEFAULT_GOAL
+    hash_tag=DEFAULT_HASHTAG
+    if len(sys.argv) > 1:
+        hash_tag = sys.argv[1]
+    if len(sys.argv) > 2:
+        GOAL = int(sys.argv[2])
     if os.path.exists(CSV_FILENAME):
         print("Reuse existing file of tweets: {}".format(CSV_FILENAME))
     else:
@@ -175,6 +192,6 @@ if __name__ == "__main__":
         download_from_twitter()
     tweets=read_csv(CSV_FILENAME)
     analyze_tokens(tweets)
-    analyze_top_tweeters()
+    analyze_top_tweeters(CSV_FILENAME)
     print("Our analysis is in these files: {}, {}, {}, {}".format
         (CSV_FILENAME,TOKENS_FILENAME,FREQ_FILENAME,SNA_FILENAME))

@@ -53,7 +53,10 @@ def download_from_twitter():
     TwitterHashtag.write_csv(timeline,csv) # for processing
 
 def clean_text(orig_text,verbose=False):
-    """Prepare for NLP by removing problematic characters."""
+    """Prepare for NLP by removing problematic characters.
+
+    Adapted from code kindly provided by Dr. Brian Powell at WVU.
+    """
     import re, string
     if verbose: print("ORIGINAL")
     if verbose: print(orig_text)
@@ -79,10 +82,14 @@ def clean_text(orig_text,verbose=False):
     return clean_text;
 
 def get_tokens(textin):
-    """Make a list of words from the given string."""
+    """Make a list of words from the given string.
+
+    Use technique from
+    https://www.geeksforgeeks.org/removing-stop-words-nltk-python/
+
+    """
     tokens_list=word_tokenize(textin)  # nltk library call
     large_tokens=[w for w in tokens_list if len(w)>=MIN_WORD_SIZE]
-    # Learned from https://www.geeksforgeeks.org/removing-stop-words-nltk-python/
     nonstop_tokens_list=[w for w in large_tokens if not w in stops]
     return nonstop_tokens_list
 
@@ -92,13 +99,20 @@ def get_stems(tokens):
     return stem_tokens
 
 def get_lemmas(tokens):
-    """Make a lemmatized list from the given word list."""
-    # Learned from https://www.geeksforgeeks.org/python-lemmatization-with-nltk/
+    """Make a lemmatized list from the given word list.
+
+    Use technique from
+    https://www.geeksforgeeks.org/python-lemmatization-with-nltk/
+    """
     lemma_tokens=[lemmatizer.lemmatize(w) for w in tokens]
     return lemma_tokens
 
 def analyze_word_frequency (word_string):
-    """Generate histogram from given string. Write CSV file."""
+    """Generate histogram from given string. Write CSV file.
+
+    Use sort technique from
+    https://www.geeksforgeeks.org/python-sort-python-dictionaries-by-key-or-value/
+    """
     word_list = sorted(word_string.split())
     prev_word=""
     frequencies={}
@@ -146,7 +160,11 @@ def analyze_tokens(tweets):
     analyze_word_frequency(lemmas)
 
 def analyze_top_tweeters(filename):
-    """Generate list of important users from CSV file of tweets."""
+    """Generate list of important users from CSV file of tweets.
+
+    Adapt sort technique from
+    https://www.geeksforgeeks.org/python-sort-python-dictionaries-by-key-or-value/
+    """
     database = read_csv(filename)
     compilation = {}
     for one_tweet in database:
@@ -159,7 +177,6 @@ def analyze_top_tweeters(filename):
         (tw,rt,fv) = compilation[user]
         (tw,rt,fv) = (tw+tweets, rt+retweets, fv+favorites)
         compilation[user] = (tw,rt,fv)
-    # sort by sum of retweets+favorites
     sortcomp = sorted(compilation.items(), key=lambda kv: kv[1][1]+kv[1][2])
     with open(SNA_FILENAME, 'w', newline='', encoding='utf-8') as f:
         fieldnames = ['screen_name','tweets','retweets','favorites','engagements','average']
